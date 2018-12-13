@@ -7,38 +7,36 @@
 #include <iostream>
 #include "Dijkstra.h"
 
-uint32_t alg_eng::Dijkstra::shortestPath(uint32_t src, uint32_t target) {
-    for(uint32_t i = 0; i < graph.numberOfNodes; i++){
-        costs[i] = UINT32_MAX;
+double alg_eng::Dijkstra::shortestPath(NodeId src, NodeId target) {
+    for(size_t i = 0; i < graph.numberOfNodes; i++){
+        costs.emplace_back(SIZE_MAX);
     }
     costs[src] = 0;
-    auto costComp = [this](const uint32_t& a, const uint32_t& b) { return costs[a] < costs[b];};
-    std::priority_queue<uint32_t, std::vector<uint32_t>, std::function<bool(std::uint32_t, std::uint32_t)>> priorityQueue(costComp);
+    std::priority_queue<PQElement> priorityQueue;
     auto& nodes = graph.nodes;
-    auto& edges = graph.edges;
-    priorityQueue.push(src);
+    auto& sourceOffset = graph.sourceOffset;
+    auto& edges = graph.sourceEdges;
+    priorityQueue.emplace(src, 0);
     while(!priorityQueue.empty()){
-        uint32_t currentNode = priorityQueue.top();
+        PQElement currentNode = priorityQueue.top();
         priorityQueue.pop();
-        if(currentNode==target)
-            return costs[target];
-        uint32_t begin = nodes[currentNode].offset;
-        uint32_t end = nodes[currentNode+1].offset;
-        for(int i = begin; i < end; ++i){
+        if((currentNode.id)==target)
+            return (currentNode.cost);
+        std::size_t begin = sourceOffset[currentNode.id];
+        std::size_t end = sourceOffset[currentNode.id+1];
+        for(size_t i = begin; i <= end; ++i){
             alg_eng::Graph::Edge& currentEdge = edges[i];
-            if(costs[currentEdge.target] > costs[currentNode] + currentEdge.weight){
-                costs[currentEdge.target] = costs[currentNode] + currentEdge.weight;
-                priorityQueue.emplace(currentEdge.target);
-                std::cout << priorityQueue.size() << std::endl;
+            auto addedCost = currentNode.cost + currentEdge.weight;
+            if(costs[currentEdge.target] > addedCost){
+                costs[currentEdge.target] = addedCost;
+                priorityQueue.emplace(currentEdge.target, addedCost);
             }
         }
     }
-    return costs[target];
+    return costs.at(target);
 }
 
-bool alg_eng::Dijkstra::costCompare(const uint32_t &first, const uint32_t &second) {
-    return costs[first] < costs[second];
-}
 
 alg_eng::Dijkstra::Dijkstra(const alg_eng::Graph &graph) : graph(graph) {costs.reserve(graph.numberOfNodes);}
 
+alg_eng::Dijkstra::PQElement::PQElement(alg_eng::NodeId id, size_t cost) : id(id), cost(cost) {}

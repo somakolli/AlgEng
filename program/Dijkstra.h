@@ -6,16 +6,28 @@
 #define PROGRAM_DIJKSTRA_H
 
 #include "Graph.h"
+#include "tuple"
 
 namespace alg_eng{
+	typedef size_t NodeId;
+	typedef size_t EdgeId;
     class Dijkstra {
+    	class PQElement {
+    	public:
+    		NodeId id;
+    		size_t cost;
+    		bool operator <(const PQElement& rhs) const
+			{
+    			return cost > rhs.cost;
+			}
+			PQElement(NodeId id, size_t cost);
+    	};
     private:
         alg_eng::Graph graph;
-        std::vector<uint32_t> costs;
-        bool costCompare(const uint32_t& first, const uint32_t& second);
+        std::vector<size_t> costs;
     public:
         Dijkstra(const Graph &graph);
-        uint32_t shortestPath(uint32_t src, uint32_t target);
+        double shortestPath(NodeId src, NodeId target);
     };
 
 }
